@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Histórico · LinkedIn · Contagem de Conexões</title>
+<link rel="icon" href="icons/32.png">
+<link rel="stylesheet" href="history.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>LinkedIn · Contagem de Conexões</h1>
+    <p>Histórico de convites de conexão enviados</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="convites" aria-selected="true">Convites</button>
+    <button role="tab" data-tab="empresas" aria-selected="false">Empresas</button>
+    <button role="tab" data-tab="atencao" aria-selected="false">Atenção <span id="alertBadge" class="badge" hidden></span></button>
+  </nav>
+
+  <section class="card filters">
+    <div class="seg" id="period">
+      <button data-p="day">Dia</button>
+      <button data-p="week">Semana</button>
+      <button data-p="month" class="on">Mês</button>
+      <button data-p="all">Tudo</button>
+    </div>
+    <div class="nav-date">
+      <button id="prev" aria-label="Período anterior">‹</button>
+      <input type="date" id="dayInput">
+      <input type="month" id="monthInput">
+      <span id="periodLabel"></span>
+      <button id="next" aria-label="Próximo período">›</button>
+      <button id="todayBtn" class="link">Hoje</button>
+    </div>
+    <div class="row2">
+      <input type="search" id="q" placeholder="Buscar nome, cargo ou empresa">
+      <select id="companyFilter"><option value="">Todas as empresas</option></select>
+    </div>
+  </section>
+
+  <p class="summary" id="summary"></p>
+
+  <section id="tab-convites" class="card table-card">
+    <table>
+      <thead><tr><th>Data</th><th>Pessoa</th><th>Empresa</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="emptyInv" hidden>Nenhum convite neste período.</p>
+  </section>
+
+  <section id="tab-empresas" class="card table-card" hidden>
+    <table>
+      <thead><tr><th>Empresa</th><th class="num">Pessoas</th><th>Quem</th><th>Primeiro / último contato</th></tr></thead>
+      <tbody id="companyRows"></tbody>
+    </table>
+    <p class="empty" id="emptyComp" hidden>Nenhuma empresa neste período.</p>
+  </section>
+
+  <section id="tab-atencao" hidden>
+    <div class="card">
+      <h2>O que aprendemos com os avisos do LinkedIn</h2>
+      <p id="learnText" class="muted"></p>
+      <div id="sugArea"></div>
+      <div class="goals">
+        <label>Meta diária <input type="number" id="gDaily" min="1" max="200"></label>
+        <label>Meta semanal (7 dias) <input type="number" id="gWeekly" min="1" max="500"></label>
+        <button id="gSave" class="outline">Salvar metas</button>
+        <span id="gSaved" class="ok" hidden>Salvo</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Convites pendentes e taxa de aceite</h2>
+      <p class="muted">Os números se atualizam sozinhos quando você abre no LinkedIn <b>Minha rede › Gerenciar convites › Enviados</b> (lê "Pessoas (N)") e a página <b>Minha rede</b> (lê "Conexões N"). Você também pode digitar.</p>
+      <div class="netgrid">
+        <div class="stat"><span>Pendentes</span><b id="nPend">—</b><small id="nPendAt"></small></div>
+        <div class="stat"><span>Conexões</span><b id="nConn">—</b><small id="nConnAt"></small></div>
+        <div class="stat"><span>Aceitos desde o início</span><b id="nAcc">—</b><small>conexões atuais − conexões no início</small></div>
+        <div class="stat"><span>Taxa de aceite estimada</span><b id="nRate">—</b><small>aceitos ÷ (aceitos + pendentes)</small></div>
+      </div>
+      <div class="goals">
+        <label>Pendentes <input type="number" id="iPend" min="0"></label>
+        <label>Conexões <input type="number" id="iConn" min="0"></label>
+        <label>Conexões no início <input type="number" id="iBase" min="0"></label>
+        <label>Alertar com pendentes ≥ <input type="number" id="iWarn" min="10"></label>
+        <button id="netSave" class="outline">Salvar</button>
+        <span id="netSaved" class="ok" hidden>Salvo</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Registrar um aviso manualmente</h2>
+      <p class="muted">Use para avisos que apareceram antes de instalar a extensão (como o de hoje). A contagem é calculada com o histórico até aquele momento, então lance antes os envios antigos.</p>
+      <div class="goals">
+        <input type="datetime-local" id="maTs">
+        <button id="maAdd" class="outline">Registrar aviso</button>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <table>
+        <thead><tr><th>Quando o aviso apareceu</th><th class="num">No dia</th><th class="num">Em 7 dias</th><th class="num">Média por dia ativo</th><th>Últimos 7 dias</th><th></th></tr></thead>
+        <tbody id="alertRows"></tbody>
+      </table>
+      <p class="empty" id="emptyAlert" hidden>Nenhum aviso registrado ainda. Quando o LinkedIn mostrar "prestes a atingir o limite semanal de convites", a extensão registra sozinha.</p>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button id="csv" class="outline">Exportar CSV (filtro atual)</button>
+    <button id="backup" class="outline">Fazer backup (tudo)</button>
+    <button id="restoreBtn" class="outline">Restaurar backup</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+  </div>
+  <p class="hint">A empresa é preenchida automaticamente a partir do título da pessoa quando possível. Se estiver errada ou vazia, clique nela para corrigir. Tudo fica salvo só neste navegador.</p>
+</main>
+
+<script src="common.js"></script>
+<script src="history.js"></script>
+</body>
+</html>
