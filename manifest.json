@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn · Contagem de Conexões",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Conta os convites de conexão que você envia no LinkedIn (hoje e últimos 7 dias) para manter um ritmo seguro.",
   "permissions": ["storage"],
   "background": { "service_worker": "background.js" },

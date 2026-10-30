@@ -106,6 +106,8 @@
   chrome.storage.local.get("diagMode").then((r) => { diag = !!r.diagMode; }).catch(() => {});
   function diagLog(kind, text, verdict) {
     if (!diag) return;
+    // Ignora ruído de leitores de tela (ex.: "Play", "Pause" de vídeos).
+    if (kind === "Notificação" && (text || "").trim().length < 12 && !/\s/.test((text || "").trim())) return;
     send({ type: "diag-log", entry: { ts: Date.now(), kind, text: (text || "").slice(0, 160), verdict, page: location.pathname.slice(0, 60) } })?.catch?.(() => {});
   }
 
@@ -158,7 +160,7 @@
     if (root.matches && root.matches(TOAST_SELECTOR)) checkToast(root);
     root.querySelectorAll(TOAST_SELECTOR).forEach(checkToast);
     // O aviso de limite costuma vir num modal, não num toast.
-    root.querySelectorAll("[role='dialog'], .artdeco-modal").forEach((d) => {
+    root.querySelectorAll("[role='dialog'], [aria-modal='true'], dialog, .artdeco-modal").forEach((d) => {
       const txt = textOf(d);
       if (!txt) return;
       if (LIMIT_RE.test(txt) && seen.get(d) !== "limit") {
@@ -189,10 +191,30 @@
     }).observe(root, { childList: true, subtree: true, characterData: true });
     scan(root);
   }
-  function findShadowRoots(root) {
-    root.querySelectorAll("#interop-outlet, [data-testid='interop-shadowdom']").forEach((h) => {
-      if (h.shadowRoot) observe(h.shadowRoot);
-    });
+  // O LinkedIn abre várias janelas (ex.: "Criar publicação", convite) dentro de
+  // shadow DOM, às vezes fechado. Procura hosts de shadow root em toda a página
+  // (no máximo a cada 1,5 s) e passa a observar cada um.
+  const shadowHosts = new WeakSet();
+  let lastShadowScan = 0, shadowTimer = null;
+  function getShadow(el) {
+    if (el.shadowRoot) return el.shadowRoot;
+    try { return chrome.dom && chrome.dom.openOrClosedShadowRoot ? chrome.dom.openOrClosedShadowRoot(el) : null; } catch { return null; }
+  }
+  function findShadowRoots() {
+    const wait = 1500 - (Date.now() - lastShadowScan);
+    if (wait > 0) {
+      if (!shadowTimer) shadowTimer = setTimeout(() => { shadowTimer = null; findShadowRoots(); }, wait);
+      return;
+    }
+    lastShadowScan = Date.now();
+    const visit = (root) => {
+      root.querySelectorAll("*").forEach((el) => {
+        if (shadowHosts.has(el)) return;
+        const sr = getShadow(el);
+        if (sr) { shadowHosts.add(el); observe(sr); visit(sr); }
+      });
+    };
+    visit(document);
   }
 
   // Plano B: clique em "Enviar"/"Enviar sem nota" dentro do modal de convite.
@@ -208,7 +230,7 @@
       return;
     }
     if (!SEND_BTN_RE.test(label)) return;
-    const dialog = path.find((n) => n.getAttribute && (n.getAttribute("role") === "dialog" || (n.classList && n.classList.contains("artdeco-modal"))));
+    const dialog = path.find((n) => n.getAttribute && (n.getAttribute("role") === "dialog" || n.getAttribute("aria-modal") === "true" || n.tagName === "DIALOG" || (n.classList && n.classList.contains("artdeco-modal"))));
     if (!dialog || !INVITE_DIALOG_RE.test(textOf(dialog))) return;
     // Espera um pouco: se o LinkedIn bloquear o envio, o toast/aviso aparece em vez disso.
     setTimeout(() => countInvite("click"), 1500);

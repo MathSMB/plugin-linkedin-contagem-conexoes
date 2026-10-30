@@ -16,7 +16,7 @@ Ela só **lê** a página: não clica, não envia nada e não usa servidor. Tudo
 - **Histórico permanente** com nome, cargo, empresa e link do perfil de cada convite. Filtros por dia, semana e mês, busca, filtro por empresa, aba **Empresas** e exportação em CSV.
 - **Aprende com os avisos do LinkedIn**: quando aparece "prestes a atingir o limite semanal de convites", registra a contagem daquele momento e sugere metas 20% abaixo (aba **Atenção**).
 - **Convites pendentes e taxa de aceite**: lê "Pessoas (N)" em *Gerenciar convites › Enviados* e "Conexões N" em *Minha rede*.
-- **Modo teste**: mostra o que a extensão leu na página, sem contar nada.
+- **Modo teste**: mostra o que a extensão leu na página, sem contar nada. Testes seguros: salvar uma publicação ("Publicação salva") e abrir "Começar publicação".
 - **Backup e restauração** do histórico (arquivo JSON).
 - **Aviso de nova versão**: compara a versão instalada com o `manifest.json` deste repositório. Só funciona se o repositório for público.
 
@@ -39,7 +39,48 @@ git pull
 
 Depois clique no ícone de **recarregar** da extensão em `chrome://extensions` e dê F5 no LinkedIn. Use sempre a **mesma pasta**: o histórico continua salvo.
 
-> ⚠️ O histórico fica preso à extensão instalada. Se você **remover** a extensão ou carregar uma **pasta diferente**, ela vira outra extensão e começa vazia. Antes de trocar de pasta ou de computador, faça **Histórico › Fazer backup** e depois **Restaurar backup** na nova instalação.
+Quando houver uma versão nova, o popup e o cartão no LinkedIn mostram **"Nova versão X disponível"**. A checagem acontece ao abrir o Chrome e a cada 6 horas.
+
+## Onde ficam seus dados e como não perdê-los
+
+O histórico fica no armazenamento interno da extensão (`chrome.storage.local`), dentro do seu perfil do Chrome. Não vai para nenhum servidor e não fica no repositório.
+
+| Situação | O histórico… |
+| --- | --- |
+| Fechar o Chrome, reiniciar o PC | continua |
+| `git pull` + recarregar na **mesma pasta** | continua |
+| **Remover** a extensão | é apagado |
+| Carregar a extensão de **outra pasta** | começa vazio (o Chrome trata como outra extensão) |
+| Outro computador ou outro perfil do Chrome | começa vazio |
+
+### Fazer backup
+
+1. Clique no ícone da extensão › **Abrir histórico completo**.
+2. Clique em **Fazer backup (tudo)**. Isso baixa um arquivo `backup-convites-linkedin-AAAA-MM-DD.json` com convites, avisos de limite, metas e números da rede.
+3. Guarde o arquivo num lugar seguro (Drive, OneDrive etc.). Uma vez por semana é suficiente.
+
+### Restaurar backup
+
+1. Abra o histórico da extensão.
+2. Clique em **Restaurar backup** e escolha o arquivo `.json`.
+3. Os convites são **somados** ao que já existe, sem duplicar. As metas do backup são aplicadas.
+
+### Trocar para a pasta clonada (ou outro computador) sem perder o histórico
+
+1. Na extensão **atual**, faça **Fazer backup (tudo)**.
+2. Clone o repositório:
+   ```bash
+   git clone https://github.com/MathSMB/plugin-linkedin-contagem-conexoes.git
+   ```
+3. Em `chrome://extensions`, **remova** a extensão antiga e use **Carregar sem compactação** na pasta clonada.
+4. Abra o histórico da nova instalação e clique em **Restaurar backup** com o arquivo do passo 1.
+5. Dê F5 nas abas do LinkedIn.
+
+Daqui em diante, use sempre essa pasta e atualize só com `git pull`.
+
+### Exportar para planilha
+
+**Exportar CSV (filtro atual)** baixa os convites filtrados (data, nome, título, empresa, perfil) separados por `;`, prontos para o Excel. É só para consulta: para restaurar, use o backup `.json`.
 
 ## Estrutura
 
